@@ -36,7 +36,6 @@ jobs:
       - name: Clone OpenWrt openwrt-25.12 branch
         run: |
           git clone --depth 1 \
-            -b openwrt-25.12 \
             https://github.com/openwrt/openwrt.git openwrt
 
       - name: Update & install feeds
