@@ -11,7 +11,7 @@ on:
 jobs:
   build:
     name: Build NN6000v2 (IPQ6000)
-    runs-on: ubuntu-22.04    # ⚠️ IPQ6000是ARM64目标，用x86 runner交叉编译即可
+    runs-on: ubuntu-latest    # ⚠️ IPQ6000是ARM64目标，用x86 runner交叉编译即可
                               # ubuntu-22.04-arm 也可以用，但意义不大
 
     steps:
