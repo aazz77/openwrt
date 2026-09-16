@@ -1,4 +1,4 @@
-name: Build OpenWrt for Link NN6000v2
+name: Build OpenWrt NN6000v2
 
 on:
   workflow_dispatch:
@@ -10,9 +10,8 @@ on:
 
 jobs:
   build:
-    name: Build NN6000v2 (IPQ6000)
-    runs-on: ubuntu-latest    # ⚠️ IPQ6000是ARM64目标，用x86 runner交叉编译即可
-                              # ubuntu-22.04-arm 也可以用，但意义不大
+    name: Build NN6000v2 (IPQ6000 / qualcommax)
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -34,9 +33,10 @@ jobs:
             libncurses5-dev libssl-dev python3-distutils \
             rsync unzip zlib1g-dev file wget
 
-      - name: Clone OpenWrt (main branch, has NN6000v2 support)
+      - name: Clone OpenWrt openwrt-25.12 branch
         run: |
           git clone --depth 1 \
+            -b openwrt-25.12 \
             https://github.com/openwrt/openwrt.git openwrt
 
       - name: Update & install feeds
@@ -56,8 +56,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: openwrt/dl
-          key: openwrt-dl-${{ hashFiles('openwrt/.config') }}
-          restore-keys: openwrt-dl-
+          key: openwrt-25.12-dl-${{ hashFiles('openwrt/.config') }}
+          restore-keys: openwrt-25.12-dl-
 
       - name: Download package sources
         working-directory: openwrt
@@ -65,17 +65,19 @@ jobs:
 
       - name: Build firmware
         working-directory: openwrt
-        run: make -j$(nproc) V=s 2>&1 | tee build.log || \
-             make -j1 V=s 2>&1 | tee build.log
+        run: |
+          make -j$(nproc) V=s 2>&1 | tee build.log || \
+          make -j1 V=s 2>&1 | tee build.log
 
-      - name: Upload factory & sysupgrade images
+      - name: Upload images
         uses: actions/upload-artifact@v4
         with:
-          name: nn6000v2-images
+          name: nn6000v2-25.12-${{ github.run_number }}
           path: |
             openwrt/bin/targets/qualcommax/ipq60xx/*nn6000v2*factory*.bin
             openwrt/bin/targets/qualcommax/ipq60xx/*nn6000v2*sysupgrade*.bin
             openwrt/bin/targets/qualcommax/ipq60xx/*nn6000v2*initramfs*.itb
+            openwrt/bin/targets/qualcommax/ipq60xx/sha256sums
           retention-days: 14
 
       - name: Upload build log on failure
